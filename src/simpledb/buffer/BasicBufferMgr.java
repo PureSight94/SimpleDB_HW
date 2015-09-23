@@ -2,6 +2,9 @@ package simpledb.buffer;
 
 import simpledb.file.*;
 import java.util.*;
+
+
+
 /**
  * Manages the pinning and unpinning of buffers to blocks.
  * @author Edward Sciore
@@ -13,10 +16,7 @@ class BasicBufferMgr {
    private Buffer[] bufferpool;
    private BitSet emptyBufferArray;
    private int numAvailable;
-   
- //Make a hash map that maps block id to frame\
-   public static Hashtable<Integer, Integer> existingBlock = new Hashtable<Integer, Integer>();
-   
+
    /**
     * Creates a buffer manager having the specified number 
     * of buffer slots.
@@ -102,7 +102,8 @@ class BasicBufferMgr {
    synchronized void unpin(Buffer buff) {
       buff.unpin();
       int currentBuffNum = buff.getBufferNum();
-     emptyBufferArray.set(currentBuffNum, true);
+      System.out.println("Unpin buffer: " + currentBuffNum);
+      //emptyBufferArray.set(currentBuffNum, true);
       if (!buff.isPinned())
          numAvailable++;
    }
@@ -148,29 +149,46 @@ class BasicBufferMgr {
    }
    */
    
+   //prints the contents of the empty Bitset
    public void printEmptyBufferArray() {
 	   System.out.println("+++++++++++++++++++++++++++");
-	   for( int i = 0; i < emptyBufferArray.length(); i++) {
+	   int emptyBufferLength = emptyBufferArray.length();
+	   for( int i = 0; i < emptyBufferLength; i++) {
 		   System.out.println("Empty Array Values " + emptyBufferArray.get(i));
 	   }
+	   System.out.println("Test Print ");
 	   System.out.println("+++++++++++++++++++++++++++++");
    }
    
-   //Looks through int array for an empty buffer. Then updates the int array.
+   //Looks through BitSet array for an empty buffer. Then updates the int array.
    private Buffer chooseUnpinnedBuffer() {
-	   printBufferMgr();
-	   printEmptyBufferArray();
-	   for(int i = 0; i < emptyBufferArray.length()-1; i++) {
+	   int emptyBufferLength = emptyBufferArray.length();
+	   for(int i = 0; i < emptyBufferLength; i++) {	   
+		   //If there is an empty buffer, return it
 		   if(emptyBufferArray.get(i)) {
+			   printEmptyBufferArray();
 			   emptyBufferArray.set(i, false);
+			   printEmptyBufferArray();
 //			   if(BasicBufferMgr.existingBlock.isEmpty()) {
 //				   System.out.println("Empty hash table");
 //				   return bufferpool[i];
 //			   }
 //			   BasicBufferMgr.existingBlock.remove(bufferpool[i].block().getBlkNum());
+			   System.out.println("Number of available buffers " + numAvailable);
 			   return bufferpool[i];
 		   }
+		   printEmptyBufferArray();
 	   }
+	   //If there are no empty buffers, do the find an unpinned buffer 
+	   //This was the initial function given
+	      for (Buffer buff : bufferpool) {
+	          if (!buff.isPinned()) {
+	       	   return buff;
+	          }
+	      }
+	   printEmptyBufferArray();
+	   printBufferMgr();
+	   System.out.println("Number of available buffers " + numAvailable);
 	   return null;
    }
    
